@@ -38,7 +38,7 @@ if(!({}).watch && ({}).__defineGetter__) {(function setupWatch(){
       _watchCache._values[obj][key] = value;
     },
     remove: function(obj, key) {
-      if(_watchCache._values[obj]) {
+      if(_watchCache._values[obj] && (key in _watchCache._values[obj])) { // what if key is a 'falsey' value?
         delete _watchCache._values[obj][key];
         _watchCache._objs[obj] -= 1;
         // if this is the last one for this obj... delete it. (free memory)
@@ -72,7 +72,8 @@ if(!({}).watch && ({}).__defineGetter__) {(function setupWatch(){
   }
 
   Object.prototype.unwatch = function(key) {
-    if(typeof key!= "string") return;
+    if(typeof key != "string") return;
+    if(!_watchCache._values[this]) return;
     var oldVal = _watchCache.get(this, key);
     _watchCache.remove(this, key);
     delete this[key];
