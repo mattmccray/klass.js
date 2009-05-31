@@ -166,7 +166,7 @@ Mozilla's JavaScript engine supports a rudimentray `KVO`-like system using `Obje
 
 Unfortunately, WebKit doesn't support this (as of yet). However, WebKit does implement `__defineGetter__` and `__defineSetter__`. So I rolled up my sleeves and wrote support for `watch` and `unwatch` for browsers that support defining getters and setter the WebKit way.
 
-**NOTE 2:** Be sure and `unwatch` everything `watch`, or you may wind up with zombie objects. If you get attacked by a zombie apocalype, it's on your head. I warned you... Be sure and protect your brains.
+**NOTE 2:** Be sure and `unwatch` everything that you `watch`, or you may wind up with zombie objects. If you get attacked by a zombie apocalype, it's on your head. I warned you... Be sure and protect your brains.
 
 
 ## Specs
