@@ -117,7 +117,7 @@
     Klass.subclassAs = arguments.callee;    
 
     // Assign to the window or namespace
-    ctx[klassName] = Klass;
+    if(klassName != '') ctx[klassName] = Klass;
 
     return Klass;
   };
