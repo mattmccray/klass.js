@@ -93,6 +93,7 @@ Screw.Unit(function() {
 
     describe("Instances", function() {
       
+    
       it("should contain methods", function() {
         Klass( 'Car', {
           start: function() {
