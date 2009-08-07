@@ -200,13 +200,9 @@ Klass('DataFinder', {
   
 });
 
-var df_methods = {
-  init: function(finder) {
-    this.finder = finder;
-  }
-};
 
-(function(){
+
+Klass('DataFilter', (function(){
   
   var mappings = [
         ['equal',         ['eq', 'equal', 'equals']],
@@ -232,15 +228,21 @@ var df_methods = {
         ['isNull',        ['isNull']],
         ['isNumeric',     ['isNumeric']],
         ['isTAFFY',       ['isTAFFY']]
-      ];
+      ],
+      df_methods = {
+        init: function(finder) {
+          this.finder = finder;
+        }
+      };
   
   $.each(mappings, function(i, map) {
     var filterName = map[0];
     $.each(map[1], function(i, methodName){
       df_methods[methodName] = new Function("value", "return this.finder.addFilter({ "+ filterName +":value });");
-    })
-  })
+    });
+  });
   
-})();
+  return df_methods;
+}));
 
-Klass('DataFilter', df_methods);
+

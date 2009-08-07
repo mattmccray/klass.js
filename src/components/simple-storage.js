@@ -2,9 +2,9 @@
 // FIXME: Convert to KvcKlass???
 Klass('SimpleStorage', function(){
 
-  function keyName (self, key) {
+  function keyName(self, key) {
     return self.name +"_"+ key;
-  },
+  };
 
   var getStorage = (function(){
     if(window.globalStorage) {
@@ -68,7 +68,7 @@ return {
     get instance() {
       if(!this.__instance) this.__instance = new this();
       return this.__instance;
-    }
+    },
     set: function(key, value) {
       return this.instance.set(key, value);
     },
@@ -82,7 +82,7 @@ return {
       return this.instance.getFloat(key, defaultValue);
     }
   }
-});
+}});
 
 
 // Testing!
