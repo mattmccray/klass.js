@@ -1,32 +1,25 @@
 # Klass.js
 
-Assorted lightweight utility scripts known to work in good browsers (Modern WebKit and Mozilla):
+**NOTE:** This is just a cursory overview, more docs to come. Klass is under active development. Specs/Bugs/Patches are welcome. None of this is tested in IE. In fact, due to it's heavy leverage of prototypes, I'm not sure it will *ever* work under IE. (I'm using it in Titanium Desktop/iPhone apps).
 
-* `Klass`
-* `dateUtils`
-* `parseArgs`
-* `typeOf`
-* `watch`
+Klass.js is a simple class hierarchy layer for JavaScript that leverages the language's `prototype` chain. No object munging, no excessive iterating over and creating extra objects. You define a class's `prototype` in the class builder. So instantiating classes should be very cheap.
 
-**NOTE:** This is just a cursory overview, more docs to come. Klass is under active development. Specs/Bugs/Patches are welcome. None of this is tested in IE. In fact, I know `watch` will *never* work under IE. The rest? It's possible.
+It's *not* a DOM framework. It's meant to run in conjunction with jQuery, or your DOM framework of choice.
 
-
-### Klass
-
-
-A simple class hierarchy layer for JavaScript based on John Resig's [Class][1]. 
-
-Klass supports single parent inheritance, inheritable static methods, namespaces, and a unique class definition style. Named classes:
+Klass supports single parent, true prototype-based inheritance, inheritable static methods, and a unique class definition style. Named classes:
 
     Klass( 'Command', {
       
       init: function(name) {
         // Constructor
+        
+        // `this` refers to the instance object...
       },
       
       klass: {
         find: function() {
           // Static method
+          // Here, `this` refers to the class constructor object
         }
       }
       
@@ -42,9 +35,11 @@ Or anonymous classes, Prototype-ish style:
     
     });
 
-An **anonymous** class is one that doesn't keep any metadata about it's constructing class.
+For improved runtime reflection, **named** classes provide a `.displayName` property which is a reference to the constructoring class's variable name.
 
-For improved runtime reflection, **named** classes provide a `_klass` property which is a reference to the constructoring class. Plus it keeps it's `_name`, `_ns` (namespace), and other metadata.
+An **anonymous** class is one that doesn't keep/know it's class name, it sets the constructor object's `.displayName` to '[AnonymousKlass]'.
+
+Also, all instantiated classes can access their Klass by the `.klass` property that's provided.
 
 Here's a quick example of why named classes are nifty:
 
@@ -55,26 +50,26 @@ Here's a quick example of why named classes are nifty:
       },
   
       save: function() {
-        alert("Saving "+ this._klass._name)
+        alert("Saving "+ this.klass.displayName)
       }
   
       klass: { // These will be static methods (that are inherited, too)
     
         find: function() {
           // in static methods, 'this' references the class object
-          alert("Finding models of type "+ this._name); 
+          alert("Finding models of type "+ this.displayName); 
         }
     
       }
     });
 
     // Create a User class that subclasses BaseModel, you can also use
-    // BaseModel.subclassAs( "User", {} ); if you prefer...
+    // BaseModel.subKlass( "User", {} ); if you prefer...
 
     BaseModel( 'User', {
   
       init: function() {
-        this._super(); // Call BaseModel#init();
+        this.callSuper('init'); // Call BaseModel#init();
       }
   
     })
@@ -85,20 +80,38 @@ Here's a quick example of why named classes are nifty:
 
     u.save(); // -> Alerts "Saving User"
 
-### parseArgs
+So you can see, the parent methods, and static methods, know the child class's name. Trust me. Very handy.
 
-If you have functions/methods that can be called with multiple arrangements of arguments, `parseArgs` can help you out. You just call `parseArgs` with examples of acceptable argument lists (as name value pairs) and it will return an object with the argument values.
+You'll notice the call to `this.callSuper('init')`. This method is telling your Klass to look at your parent's prototype object for a method called 'init', and executes it passing any extras parameters provided.
 
-    function ftp() {
-      var args = parseArgs(
-        {host:String},                               // Option 1 = ftp('myhost')
-        {host:String, user:String, password:String}, // Option 2 = ftp('myhost', 'usr', 'pwd')
-        {host:String, callback:Function}             // Option 3 = ftp('myhost', onConnect)
-      );
-  
-      // args.matchedOn will have the index of the matched argument list, 
-      // or -1 if none of the current arguments matched the argments list.
-    }
+Since you're defining the object's `prototype`, you can use JavaScript's support (in Moz and WebKit) for property getters and setters.
+
+Klass also provides support for method binding: `[object].method('methodName'[, curriedParams]);` For example:
+
+    Klass('SelectionManager', {
+      
+      init: function(containerSel, itemSel) {
+        this.container = $(containerSel);
+        this.itemSelector = itemSel;
+        
+        this.container.click( this.method('handleClick', false) );
+        this.container.dblclick( this.method('handleClick', true) );
+      },
+      
+      get selectedItems() { // A getter!
+        return $(this.itemSelector, this.containerSel);
+      },
+      
+      handleClick: function(isDblClick, event) {
+        // `this` is what you'd expect (the instance), not a DOM element...
+        if(isDblClick)
+          alert("List was double clicked!");
+        else
+          alert("List was clicked!");
+      }
+      
+    })
+
 
 ### typeOf
 
@@ -142,37 +155,53 @@ Adds support for:
 * `Date#toRelativeTime`
 
 
-### watch
+### KvcKlass
 
-**NOTE:** `watch` will not work in IE, at all. Probably ever.
+Rudimentary support for key-value coding (all property accessed via .get()/.set() methods). You can observe key changes. More docs to come.
 
-Mozilla's JavaScript engine supports a rudimentray `KVO`-like system using `Object#watch`. You tell it what property to watch on an object, give it a callback, and it'll call it anytime the property is changed.
-
-    var credentials = {
-      username: "",
-      password: ""
-    }
-
-    credentials.watch('username', function(key, oldValue, newValue) {
-      console.log(key +" has changed");
-      return newValue;
+    KvcKlass('User', {
+      
+      name: 'Default Value'
+      
     });
+    
+    var u = new User();
+    
+    u.get('name') //-> 'Default Value'
+    
+    function callback(key, value, oldValue) {
+      console.log(key +' changed to '+ value +' from '+ oldValue);
+    }
+    
+    u.observe('name', callback);
+    
+    u.set('name', 'M@'); // Callback is fired with callback('name', 'M@', 'Default Value');
 
-    credentials.username = 'bobross'; // -> callback is triggered: "username has changed"
+Has support for calling a method_missing like function when a key is get/set that doesn't exist:
 
-    // to stop observing changes...
+    KvcKlass('User', {
+      unknownProperty: function(key, value) {
+        // If value exists, .set() has been called, other wise it's a .get();
+        if(typeOf(value) != 'undefined') {
+          this[key] = value; // You can do whatever you want here...
+        } else {
+          this[key] = "some default value"; // Or whatever you wanna do with it.
+          return key +" didn't exist, before now.";
+        }
+      }
+    })
+    
+    var u = new User();
+    
+    u.get('name'); //-> 'name didn't exist, before now.'
+    u.get('name'); //-> 'some default value'
+    u.set('name', 'M@');
+    u.get('name'); //-> 'M@'
 
-    credentials.unwatch('username')
+Of course using it like that is moot. But using this pattern is great for lazy loading properties.
 
-Unfortunately, WebKit doesn't support this (as of yet). However, WebKit does implement `__defineGetter__` and `__defineSetter__`. So I rolled up my sleeves and wrote support for `watch` and `unwatch` for browsers that support defining getters and setter the WebKit way.
-
-**NOTE 2:** Be sure and `unwatch` everything that you `watch`, or you may wind up with zombie objects. If you get attacked by a zombie apocalype, it's on your head. I warned you... Be sure and protect your brains.
 
 
 ## Specs
 
-Comes complete with tests! Just open `specs/suite.html` in your browser.
-
-
-
-  [1]: http://ejohn.org/blog/simple-javascript-inheritance
+Comes with (soon to be) complete tests! Just open `specs/suite.html` in your browser.

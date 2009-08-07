@@ -1,124 +1,149 @@
-// Inspired by John Resig's Class (and he from base2 and Prototype) -> http://ejohn.org/blog/simple-javascript-inheritance
-(function klassWrapper(){
-  var initializing = false, fnTest = /xyz/.test(function(){xyz;}) ? /\b(_super|_klass)\b/ : /.*/;
+// Version 2.0.5
+(function() {
 
-  // The base Class implementation
-  this.Klass = function KlassBase(name, props){ 
-    if(this instanceof arguments.callee) {
-    } else {
-      return arguments.callee.subclassAs(name, props);
-    }
-  };
-
-  // obj.method(name, args) will curry (bind) this method call
-  this.Klass.prototype.method = function method() {
-    if(arguments.length == 0 || typeof arguments[0] != "string")
-      throw "You must specify a method name (as a String)";
-    var self = this,
-        args = Array.prototype.slice.call(arguments),
-        name = args.shift(),
-        meth = self[name];
-    if (typeof meth === 'function') 
-      return function() {
-        return meth.apply(self, args.concat(Array.prototype.slice.call(arguments)));
+  window.typeOf = (function(){
+    var arrayCtor  = (new Array).constructor,
+        dateCtor   = (new Date).constructor,
+        regexpCtor = (new RegExp).constructor;
+    return function typeOf(v) {
+      var typeStr = typeof(v);
+      if (typeStr == "object" || typeStr == 'function') {
+        if (v === null) return "null";
+        if (v.constructor == arrayCtor) return "array";
+        if (v.constructor == dateCtor) return "date";
+        if (v.constructor == regexpCtor) return "regexp";
       }
-    else
-      throw "Method "+ name +" not found!";
-  };
-
-  // Helper method for assigning properties and, optionally, providing _super()
-  function mergeProperties(from, to, parent, self) {
-    for (var name in from) {
-      // Check if we're overwriting an existing function
-      to[name] = typeof from[name] == "function" && 
-        typeof parent[name] == "function" && fnTest.test(from[name]) ?
-        (function(name, fn){
-          return function() {
-            var tmp  = this._super;
-            
-            // Add a new ._super() method that is the same method but on the super-class
-            this._super = parent[name];
-            
-            // The method only needs to be bound temporarily, so we remove it when we're done executing
-            var ret = fn.apply(this, arguments);        
-            this._super = tmp;
-            return ret;
-          };
-        })(name, from[name]) :
-        from[name];
+      return typeStr;
+    }
+  })();
+  
+  if ( typeof Object.getPrototypeOf !== "function" ) {
+    if ( typeof "test".__proto__ === "object" ) {
+      Object.getPrototypeOf = function getPrototypeOf(object){
+        return object.__proto__;
+      };
+    } else {
+      Object.getPrototypeOf = function getPrototypeOf(object){
+        // May break if the constructor has been tampered with
+        return object.constructor.prototype;
+      };
     }
   }
-
-  // Create a new Class that inherits from this class
-  Klass.subclassAs = function subclassAs(klassName, prop) {
-    // Support anonymous classes
-    if(typeof klassName == 'object' && typeof prop == 'undefined') {
-      prop = klassName;
-      klassName = '';
-    }
-    var _super       = this.prototype,
-        klassIdent   = (klassName || ""),
-        klassPath    = klassIdent.split('.'),
-        klassName    = klassPath.pop(),
-        klassMeths   = prop['klass'],
-        supKlasMeths = this['_staticMethods'],
-        ctx          = window;
-    delete prop['klass'];
-
-    // Create any needed namespaces...
-    for (var i=0; i < klassPath.length; i++) {
-      var pathSeg = klassPath[i];
-      if(!ctx[pathSeg]) ctx[pathSeg] = {};
-      ctx = ctx[pathSeg];
-    };
-    klassPath = klassPath.join('.');
-
-    // Instantiate a base class (only create the instance, don't run the init constructor)
-    initializing = true;
-    var prototype = new this();
-    initializing = false;
-
-    // Assign meta data
-    if(klassName != '') {
-      Klass._name = klassName;
-      Klass._ns = klassPath;
-      Klass._fullname = klassIdent;
-      Klass._staticMethods = klassMeths;
-      prototype._klass = Klass;
-    }
-
-    // Copy the properties over onto the new prototype
-    mergeProperties(prop, prototype, _super, this);
-
-    // The dummy class constructor
-    function Klass(klassName, props) {
-      if(this instanceof arguments.callee) {
-        // All construction is actually done in the init method
-        if ( !initializing && this.init )
-          this.init.apply(this, arguments);
-      } else {
-        // If the method is being used as a function (no new keywoard), 
-        // then make it a subclassAs() call
-        arguments.callee.subclassAs(klassName, props)
+  
+  Object.setPrototypeOf = (function(){ // Memoized
+    if( {}.__proto__ ) {
+      return function setPrototypeOf(o, proto){
+        o.__proto__ = proto;
+        return o;
+      }
+    } else {
+      return function setPrototypeOf(o, proto){ 
+        o.constructor.prototype = proto;
+        return o;
       }
     }
+  })();
+  
+  function addHelperMethods(srcObject) {
+    if(!srcObject['callSuper']) {
+      srcObject.callSuper = function callSuper() {
+        var symbol = Array.prototype.shift.call(arguments),
+            parent = Object.getPrototypeOf(Object.getPrototypeOf(this)),
+            method = (parent[symbol]) ? parent[symbol] : false;
+        if(method) {
+          return method.apply(this, arguments);
+        } else {
+          throw "Method not found: "+ symbol;
+        }
+      };
+    }
+    if(!srcObject['method']) {
+      srcObject.method = function method() {
+        if(arguments.length == 0 || typeof arguments[0] != "string") {
+          throw "You must specify a method name (as a String)";
+        }
+        var self = this,
+            args = Array.prototype.slice.call(arguments),
+            name = args.shift(),
+            meth = self[name];
+        if (typeof meth === 'function') {
+          return function curriedMethod() {
+            return meth.apply(self, args.concat(Array.prototype.slice.call(arguments)));
+          };
+        } else {
+          throw "Method "+ name +" not found!";
+        }
+      };
+    }
+  }
+  
+  window.Klass = function(cName, oProto) {
+    var klass = null;
+    if(arguments.length == 1 && typeOf(cName) != 'string') { // using typeOf to better detect true 'objects'
+      oProto = cName;
+      cName = '[AnonymousKlass]';
+    }
+    klass = function klass() {
+      if(this == window) { // Create Subclass 
+        return klass.subKlass.apply(this, arguments);
+      
+      } else { // Constructor
+        Object.setPrototypeOf(this, oProto); // The magic!
+        this.constructor = klass;
+        if(oProto['init']) {
+          return oProto.init.apply(this, arguments); 
+        }
+      }
+    }
+    klass.displayName = cName;
+    oProto = (typeof(oProto) == 'function') ? oProto(this) : oProto;
+    
+    // 'Static' methods:
+    var klassMethods = oProto['klass'];
+    if(klassMethods) {
+      if(typeOf(klassMethods) == 'object') {
+        delete oProto['klass']; // Delete the direct 'klass' property
+        // If there's still one that's a function, that's the parent's klass object (from the prototype chain)...
+        if(typeof( oProto['klass'] ) == 'function') {
+          // Make the new klass prototype the prototype of the parent klass prototype -- mind bending, isn't it?
+          Object.setPrototypeOf(klassMethods, Object.getPrototypeOf( oProto['klass'] ));
+        } 
+        addHelperMethods(klassMethods);
+        Object.setPrototypeOf(klass, klassMethods);
+        
+      } else if(typeof(klassMethods) == 'function') {
+        var klassMethodsProto = Object.getPrototypeOf( klassMethods );
+        addHelperMethods(klassMethodsProto);
+        Object.setPrototypeOf(klass, klassMethodsProto);
+      }
+    } else {
+      var klassMethodsProto = {};
+      addHelperMethods(klassMethodsProto);
+      Object.setPrototypeOf(klass, klassMethodsProto);
+    }
+    klass.subKlass = function subKlass(subName, subProto){
+      if(arguments.length == 1 && typeOf(subName) == 'object') {
+        subProto = subName;
+        subName = '[AnonymousSubKlass]';
+      }
+      Object.setPrototypeOf(subProto, oProto);
+      return Klass(subName, subProto);
+    }
+    // Experimental... Allows you to set any arbitrary object's prototype to impersonate an object of this type...
+    klass.makeImpersonator = function(obj) {
+      Object.setPrototypeOf(obj, klass._prototype_);
+      return obj;
+    }
+    
+    // "Enhance" the prototype object with some useful methods...
+    addHelperMethods(oProto);
+    oProto.klass = klass;
+    klass.__defineGetter__( "_prototype_", function(){ return oProto; } );
+    
+    if(cName != '<undefined>') {
+      window[cName] = klass;
+    }
+    return klass;
+  }
 
-    // Populate our constructed prototype object
-    Klass.prototype = prototype;
-
-    // Enforce the constructor to be what we expect
-    Klass.constructor = Klass;
-
-    // Setup classMethods...
-    if(supKlasMeths) mergeProperties(supKlasMeths, Klass, {}, Klass);
-    mergeProperties(klassMeths, Klass, (supKlasMeths || {}), Klass);
-
-    // And make this class extendable
-    Klass.subclassAs = arguments.callee;    
-
-    // Assign to the window or namespace
-    if(klassName != '') ctx[klassName] = Klass;
-
-    return Klass;
-  };
 })();

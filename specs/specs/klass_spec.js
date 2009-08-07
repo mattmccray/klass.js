@@ -5,7 +5,7 @@ Screw.Unit(function() {
     describe("Constructor", function() {
       
       it("should be defined", function () {
-        expect(Klass).to_not(equal, undefined);
+        expect(Klass).to_not(be_undefined);
       });
 
       it("should create named classes", function () {
@@ -14,23 +14,24 @@ Screw.Unit(function() {
         });
 
         expect(User).to_not(equal, undefined);
-        expect(User._name).to(equal, "User");
+        expect(User.displayName).to(equal, "User");
         
         var u = new User();
-        expect(u._klass).to(equal, User);
+        expect(u.klass).to(equal, User);
         
         delete User;
       });
 
-      it("should create anonymous classes (without metadata)", function() {
+      it("should create anonymous classes (without accurate displayName)", function() {
         var Action = Klass({
           init: function() {}
         });
         expect(Action).to_not(be_undefined)
-        expect(Action._name).to(be_undefined)
+        expect(Action.displayName).to(equal, "[AnonymousKlass]")
 
         var a = new Action();
-        expect(a._klass).to(be_undefined)
+        expect(a.klass).to(equal, Action);
+        expect(a.klass.displayName).to(equal, "[AnonymousKlass]")
         delete Action
       });
     });
@@ -45,7 +46,7 @@ Screw.Unit(function() {
             }
           }
         });
-        expect(Data.find).to_not(equal, undefined)
+        expect(Data.find).to_not(be_undefined)
         expect(Data.find()).to(equal, "found!")
 
         delete Data
@@ -55,7 +56,7 @@ Screw.Unit(function() {
         Klass( 'AR', {
           klass: {
             find: function() {
-              return "find for "+ this._name;
+              return "find for "+ this.displayName;
             }
           }
         })
@@ -79,7 +80,7 @@ Screw.Unit(function() {
         Parent( 'Child', {
           klass: {
             sayIt: function() {
-              return "from child, then "+ this._super();
+              return "from child, then "+ this.callSuper('sayIt');
             }
           }
         });
@@ -109,7 +110,7 @@ Screw.Unit(function() {
       it("should inherit methods", function() {
         Klass( 'Car', {
           start: function() {
-            return this._klass._name +" is running";
+            return this.klass.displayName +" is running";
           }
         })
         Car( 'Truck', {});
@@ -128,9 +129,10 @@ Screw.Unit(function() {
             return 'Buffoon';
           }
         });
+        
         Person( 'Sith', {
           title: function() {
-            return "Darth "+ this._super();
+            return "Darth "+ this.callSuper('title');
           }
         });
 
@@ -170,8 +172,10 @@ Screw.Unit(function() {
           
         })
         var c = new Car();
-        expect(c._klass).to(equal, Car);
-        expect(c._klass._name).to(equal, 'Car')
+        expect(c.klass).to(equal, Car);
+        expect(c.klass.displayName).to(equal, 'Car')
+        var c2 = new c.klass();
+        expect(c2.klass == Car).to(equal, true)
         delete Car
       });
       
