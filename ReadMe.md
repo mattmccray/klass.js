@@ -204,4 +204,4 @@ Of course using it like that is moot. But using this pattern is great for lazy l
 
 ## Specs
 
-Comes with (soon to be) complete tests! Just open `specs/suite.html` in your browser.
+Comes with tests! Just open `specs/suite.html` in your browser. Not entirely complete coverage yet, but it's getting better.
