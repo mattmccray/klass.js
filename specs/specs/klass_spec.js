@@ -13,7 +13,7 @@ Screw.Unit(function() {
 
         });
 
-        expect(User).to_not(equal, undefined);
+        expect(User).to_not(be_undefined);
         expect(User.displayName).to(equal, "User");
         
         var u = new User();

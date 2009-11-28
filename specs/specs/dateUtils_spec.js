@@ -30,7 +30,7 @@ Screw.Unit(function() {
         ['%Y', '2009',      "Year"]
       ];
 
-      $(formats).each(function(arr, format){
+      _.each(formats, function(format){
         it( format[0] +" to "+ format[1] +" - ("+ format[2]+")", function() {
           expect(feb0209.strftime(format[0])).to(equal, format[1]);
         });

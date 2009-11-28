@@ -20,14 +20,9 @@ var Spec = {
     return this.stack[this.pos];
   },
   push: function(name) {
-    this.stack.push({
-      name: name,
-      passed: 0,
-      failed: 0,
-      errors: 0,
-      errorMsgs: []
-    });
+    this.stack.push({});
     this.pos += 1;
+    this.reset(name);
   },
   pop: function() {
     this.pos -= 1;
@@ -36,6 +31,32 @@ var Spec = {
       this.log( eof +"\n");
     } 
     return this.stack.pop();
+  },
+  reset: function(name) {
+    var name = name || this.currentStack.name,
+        setups = this.currentStack.setups || [],
+        teardowns = this.currentStack.teardowns || [];
+    this.stack[this.pos] = {
+      name: name,
+      setups: setups,
+      teardowns: teardowns,
+      passed: 0,
+      failed: 0,
+      errors: 0,
+      errorMsgs: []
+    }
+  },
+  
+  runBefores: function() {
+    var len = this.currentStack.setups.length;
+    for (var i=0; i < len; i++) {
+      this.currentStack.setups[i].call();
+    };
+  },
+  runAfters: function() {
+    for (var i=0; i < this.currentStack.teardowns.length; i++) {
+      this.currentStack.teardowns[i].call();
+    };
   },
 
   pass: function() {
@@ -54,7 +75,7 @@ var Spec = {
     if(this.currentStack.passed > 0)
       report.push( this.currentStack.passed +' passed');
     if(this.currentStack.failed > 0)
-      report.push( this.currentStack.failed +' failed');
+      report.push( this.currentStack.failed +' FAILED');
     if(this.currentStack.errors > 0) {
       for (var i=0; i < this.currentStack.errorMsgs.length; i++) {
         if(!Spec.SPECS_ONLY) this.log( "> "+ this.currentStack.errorMsgs[i], 1 );
@@ -133,17 +154,26 @@ function describe(groupName, block) {
   Spec.pop();
 }
 
+// setup/teardown dsl
+function before(block) {
+  Spec.currentStack.setups.push(block);
+}
+function after(block) {
+  Spec.currentStack.teardowns.push(block);
+}
+
 // test dsl
 function should(testName, block) {
   // Reset pass/fail/error counts on stack...
-  Spec.pop(); Spec.push();
-  
+  Spec.reset();
   Spec.log(testName);
+  Spec.runBefores();
   try {
     block.call();
   } catch (ex) {
     Spec.error(ex);
   }
+  Spec.runAfters();
   Spec.report();
 }
 // alias
@@ -155,8 +185,16 @@ function expect(obj) {
 }
 
 // evaluators
-function equal(obj, value) {
-  return (obj == value);
+function equal(expected, actual) {
+  if (expected instanceof Object) {
+    for (var key in expected)
+      if (expected[key] != actual[key]) return false;
+    for (var key in actual)
+      if (actual[key] != expected[key]) return false;
+    return true;
+  } else {
+    return expected == actual;
+  }
 }
 
 function be_undefined(obj) {
