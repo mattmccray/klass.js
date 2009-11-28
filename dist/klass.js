@@ -1,4 +1,3 @@
-// Version 2.0.7
 (function(_root) {
 
   _root.typeOf = (function(){
@@ -17,7 +16,7 @@
       return typeStr;
     }
   })();
-  
+
   if ( typeof Object.getPrototypeOf !== "function" ) {
     if ( typeof "test".__proto__ === "object" ) {
       Object.getPrototypeOf = function getPrototypeOf(object){
@@ -25,12 +24,11 @@
       };
     } else {
       Object.getPrototypeOf = function getPrototypeOf(object){
-        // May break if the constructor has been tampered with
         return object.constructor.prototype;
       };
     }
   }
-  
+
   Object.setPrototypeOf = (function(){ // Memoized
     if( {}.__proto__ ) {
       return function setPrototypeOf(o, proto){
@@ -38,13 +36,13 @@
         return o;
       }
     } else {
-      return function setPrototypeOf(o, proto){ 
+      return function setPrototypeOf(o, proto){
         o.constructor.prototype = proto;
         return o;
       }
     }
   })();
-  
+
   function addHelperMethods(srcObject) {
     if(!srcObject['callSuper']) {
       srcObject.callSuper = function callSuper() {
@@ -77,7 +75,7 @@
       };
     }
   }
-  
+
   _root.Klass = function(cName, oProto) {
     var klass = null;
     if(arguments.length == 1 && typeOf(cName) != 'string') { // using typeOf to better detect true 'objects'
@@ -85,33 +83,30 @@
       cName = '[AnonymousKlass]';
     }
     klass = function klass() {
-      if(this == _root) { // Create Subclass 
+      if(this == _root) { // Create Subclass
         return klass.subKlass.apply(this, arguments);
-      
+
       } else { // Constructor
         Object.setPrototypeOf(this, oProto); // The magic!
         this.constructor = klass;
         if(oProto['init']) {
-          return oProto.init.apply(this, arguments); 
+          return oProto.init.apply(this, arguments);
         }
       }
     }
     klass.displayName = cName;
     oProto = (typeof(oProto) == 'function') ? oProto(this) : oProto;
-    
-    // 'Static' methods:
+
     var klassMethods = oProto['klass'];
     if(klassMethods) {
       if(typeOf(klassMethods) == 'object') {
         delete oProto['klass']; // Delete the direct 'klass' property
-        // If there's still one that's a function, that's the parent's klass object (from the prototype chain)...
         if(typeof( oProto['klass'] ) == 'function') {
-          // Make the new klass prototype the prototype of the parent klass prototype -- mind bending, isn't it?
           Object.setPrototypeOf(klassMethods, Object.getPrototypeOf( oProto['klass'] ));
-        } 
+        }
         addHelperMethods(klassMethods);
         Object.setPrototypeOf(klass, klassMethods);
-        
+
       } else if(typeof(klassMethods) == 'function') {
         var klassMethodsProto = Object.getPrototypeOf( klassMethods );
         addHelperMethods(klassMethodsProto);
@@ -130,18 +125,16 @@
       Object.setPrototypeOf(subProto, oProto);
       return Klass(subName, subProto);
     }
-    // Experimental... Allows you to set any arbitrary object's prototype to impersonate an object of this type...
     klass.adopt = function(obj) {
       Object.setPrototypeOf(obj, klass._prototype_);
       return obj;
     }
-    
-    // "Enhance" the prototype object with some useful methods...
+
     addHelperMethods(oProto);
     oProto.klass = klass;
     if(klass.__defineGetter__) klass.__defineGetter__( "_prototype_", function(){ return oProto; } );
     else klass._prototype_ = (function(){ return oProto; })();
-    
+
     if(cName != '<undefined>') {
       _root[cName] = klass;
     }

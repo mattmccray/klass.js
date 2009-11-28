@@ -1,24 +1,24 @@
 
 desc "Compiles from source scripts into dist/"
 task :build do
-  puts "FIXME!"
+#  puts "FIXME!"
 
-#   puts "Building klass libraries..."
-# 
-#   klass = jsLibrary('klass')
-# #  klass.save_to 'dist/klass.js'
-#   klass.save_compressed_to 'dist/individual/klass.min.js'
-# 
-#   dateUtils = jsLibrary %w(dateUtils)
-#   dateUtils.save_compressed_to 'dist/individual/dateUtils.min.js'
-# 
-#   parseArgs = jsLibrary %w(parseArgs)
-#   parseArgs.save_compressed_to 'dist/individual/parseArgs.min.js'
-# 
-#   all = jsLibrary %w(klass prototypeOf typeOf watch dateUtils parseArgs)
-#   all.save_compressed_to 'dist/klass.js'
-# 
-#   puts 'Done.'
+  puts "Building klass libraries..."
+
+  klass = jsLibrary('klass')
+  klass.save_to 'dist/klass.js'
+  klass.save_compressed_to 'dist/klass.min.js'
+
+  # dateUtils = jsLibrary %w(dateUtils)
+  # dateUtils.save_compressed_to 'dist/individual/dateUtils.min.js'
+  # 
+  # parseArgs = jsLibrary %w(parseArgs)
+  # parseArgs.save_compressed_to 'dist/individual/parseArgs.min.js'
+  # 
+  # all = jsLibrary %w(klass prototypeOf typeOf watch dateUtils parseArgs)
+  # all.save_compressed_to 'dist/klass.js'
+
+  puts 'Done.'
 end
 
 
