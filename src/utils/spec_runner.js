@@ -105,6 +105,24 @@ var Spec = {
         p.innerHTML = pad + msg +"\n";
         document.body.appendChild(p);
       }
+      
+      if(!_root.onload) _root.onload = function() {
+        var results = document.getElementById('output').innerHTML.split('\n'),
+            transformed = [];
+        for (var i=0; i < results.length; i++) {
+          var line = results[i];
+          if(/[\w]*\&gt;/.test(line)) {
+            transformed.push( '<span style="color:red;">'+ line +'</span>' );
+          } else if(/[\w]*[\d]* passed$/.test(line)) {
+            transformed.push( '<span style="color:green;">'+ line +'</span>' );
+          } else if(/[\w]*[\d]* passed/.test(line)) {
+            transformed.push( '<span style="color:orange;">'+ line +'</span>' );
+          } else {
+            transformed.push( line );
+          }
+        };
+        document.getElementById('output').innerHTML = transformed.join("\n");
+      }
     } 
   },
 
