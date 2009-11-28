@@ -47,7 +47,7 @@ Screw.Unit(function() {
     });
 
     it("should correctly report undefined", function() {
-      var toUdef = typeOf(window['crap']);
+      var toUdef = typeOf(this['crap']);
       expect(toUdef).to(equal, "undefined");
     });
 
