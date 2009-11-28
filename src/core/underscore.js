@@ -19,3 +19,27 @@ b.isEmpty=function(a){return(b.isArray(a)?a:b.values(a)).length==0};b.isElement=
 "undefined"};b.noConflict=function(){j._=m;return this};b.identity=function(a){return a};b.breakLoop=function(){throw l;};var n=0;b.uniqueId=function(a){var c=n++;return a?a+c:c};b.functions=function(){var a=[];for(var c in b)Object.prototype.hasOwnProperty.call(b,c)&&a.push(c);return b.without(a,"VERSION","prototype","noConflict").sort()};b.template=function(a,c){a=new Function("obj","var p=[],print=function(){p.push.apply(p,arguments);};with(obj){p.push('"+a.replace(/[\r\t\n]/g," ").split("<%").join("\t").replace(/((^|%>)[^\t]*)'/g,
 "$1\r").replace(/\t=(.*?)%>/g,"',$1,'").split("\t").join("');").split("%>").join("p.push('").split("\r").join("\\'")+"');}return p.join('');");return c?a(c):a};b.forEach=b.each;b.foldl=b.inject=b.reduce;b.foldr=b.reduceRight;b.filter=b.select;b.every=b.all;b.some=b.any;b.head=b.first;b.tail=b.rest;b.methods=b.functions;function k(a,c){return c?b(a).chain():a}b.each(b.functions(),function(a){i.prototype[a]=function(){Array.prototype.unshift.call(arguments,this._wrapped);return k(b[a].apply(b,arguments),
 this._chain)}});b.each(["pop","push","reverse","shift","sort","splice","unshift"],function(a){i.prototype[a]=function(){Array.prototype[a].apply(this._wrapped,arguments);return k(this._wrapped,this._chain)}});b.each(["concat","join","slice"],function(a){i.prototype[a]=function(){return k(Array.prototype[a].apply(this._wrapped,arguments),this._chain)}});i.prototype.chain=function(){this._chain=true;return this};i.prototype.value=function(){return this._wrapped}})();
+/*
+Copyright (c) 2009 Jeremy Ashkenas, DocumentCloud
+ 
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+ 
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+ 
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+*/
