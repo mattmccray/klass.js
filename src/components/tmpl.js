@@ -1,9 +1,9 @@
 // Simple JavaScript Templating
 // John Resig - http://ejohn.org/ - MIT Licensed
-(function(){
+(function(_root){
   var cache = {};
   
-  this.tmpl = function tmpl(str, data){
+  _root.tmpl = function tmpl(str, data){
     // Figure out if we're getting a template, or if we need to
     // load the template - and be sure to cache the result.
     var fn = !tmpl.re.test(str) ?
@@ -31,4 +31,4 @@
   };
   
   tmpl.re = (/[^a-z|\/]/gi);
-})();
+})(this);

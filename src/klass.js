@@ -142,7 +142,7 @@
     if(klass.__defineGetter__) klass.__defineGetter__( "_prototype_", function(){ return oProto; } );
     else klass._prototype_ = (function(){ return oProto; })();
     
-    if(cName != '<undefined>') {
+    if(cName != '[AnonymousKlass]') {
       _root[cName] = klass;
     }
     return klass;

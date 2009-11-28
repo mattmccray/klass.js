@@ -3,7 +3,7 @@
 Klass('SelectionManager', {
   
   init: function(options) {
-    options = $.extend({
+    options = _.extend({
       name: 'selection',
       container: 'list-control',
       item: 'list-item',
@@ -121,7 +121,7 @@ Klass('SelectionManager', {
   
   preserveSelection: function() {
     if(!this.isEmpty()) {
-      this._selectedItems = $.map(this.selectedItems().get(), function(n, i){ return n.id; })
+      this._selectedItems = _.map(this.selectedItems().get(), function(n){ return n.id; })
       this._selectedItemId = this._selectedItem.attr('id');
     }
   },
@@ -129,7 +129,7 @@ Klass('SelectionManager', {
   restoreSelection: function() {
     if(this._selectedItems) {
       var self = this;
-      $.each(this._selectedItems, function(i, id) {
+      _.each(this._selectedItems, function(id) {
         self._addSelectedClass( $('#'+id) );
       })
       this._selectedItem = $('#'+ this._selectedItemId);

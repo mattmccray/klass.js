@@ -7,31 +7,36 @@ Klass('SimpleStorage', function(){
   };
 
   var getStorage = (function(){
-    if(window.globalStorage) {
-      return function() {
-        var storage = null;
-        try{
-          storage = window.globalStorage[location.hostname];
-        } catch(ex) {
-          //throw "Can't use the storage system from here... (filesystem?)"
-          storage = { // FIXME: Persist this mock object via a Cookie?
-            _data: {},
-            getItem: function(key) {
-              return this._data[key];
-            },
-            setItem: function(key, value) {
-              this._data[key] = value;
-            }
-          }
-        }
-        return storage 
-      }
-    } else if(window.localStorage) {
+    if(window.localStorage) {
       return function() {
         return window.localStorage;
       } 
     } else {
-      throw "No Storage system available!";
+//      throw "No Storage system available!";
+      if(!window._customStorage) window._customStorage = { 
+        _data: {},
+        getItem: function(key) {
+          return this._data[key];
+        },
+        setItem: function(key, value) {
+          this._data[key] = value;
+          this._save();
+        },
+        _save: function() {
+          var dataElements = [];
+          for(key in this._data) {
+            if(this._data.hasOwnProperty(key)) {
+              var value = this._data[key];
+              dataElements.push( escape(key) +"="+ escape(value) );
+            }
+          }
+          var dataString = dataElements.join("&");
+          // FIXME: Persist the data via a cookie or something else?
+        }
+      }
+      return function() {
+        return window._customStorage;
+      }
     }
   })();
 

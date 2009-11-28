@@ -8,13 +8,13 @@ Klass('StateManager', {
     this.currentState = null;
     this.currentStateIdx = -1;
     this.previousState = null;
-    this.validStates = states; // Remove the '.' $.map(arr, callback(item, idx))
+    this.validStates = states; // Remove the '.' _.map(arr, callback(item))
     this.set( initialState || states[0] );
   },
   
   set: function(newState) {
     if(newState == this.currentState) return;
-    var newStateIdx = $.inArray(newState, this.validStates);
+    var newStateIdx = _.include(this.validStates, newState);
     if(newStateIdx >= 0) {
       this.previousState = this.currentState;
       this.target.removeClass(this.previousState);

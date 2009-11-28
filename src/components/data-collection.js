@@ -235,9 +235,9 @@ Klass('DataFilter', (function(){
         }
       };
   
-  $.each(mappings, function(i, map) {
+  _.each(mappings, function(map) {
     var filterName = map[0];
-    $.each(map[1], function(i, methodName){
+    _.each(map[1], function(methodName){
       df_methods[methodName] = new Function("value", "return this.finder.addFilter({ "+ filterName +":value });");
     });
   });
