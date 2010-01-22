@@ -9,16 +9,20 @@
 </html>
 */
 
+// TODO:
+
 var Spec = {
   // Flags
   SPECS_ONLY: false,
   
+  output: [],
+  
   // Group Stack
   stack: [],
   pos: -1,
-  get currentStack() {
-    return this.stack[this.pos];
-  },
+  // get currentStack() {
+  //   return this.stack[this.pos];
+  // },
   push: function(name) {
     this.stack.push({});
     this.pos += 1;
@@ -27,15 +31,15 @@ var Spec = {
   pop: function() {
     this.pos -= 1;
     if(this.pos < 0) {
-      var eof = (Spec.SPECS_ONLY) ? '' : "/"+ this.stack[0].name;
+      var eof = (Spec.SPECS_ONLY) ? '' : " "; //"/"+ this.stack[0].name;
       this.log( eof +"\n");
     } 
     return this.stack.pop();
   },
   reset: function(name) {
-    var name = name || this.currentStack.name,
-        setups = this.currentStack.setups || [],
-        teardowns = this.currentStack.teardowns || [];
+    var name = name || this.stack[this.pos].name,
+        setups = this.stack[this.pos].setups || [],
+        teardowns = this.stack[this.pos].teardowns || [];
     this.stack[this.pos] = {
       name: name,
       setups: setups,
@@ -48,39 +52,39 @@ var Spec = {
   },
   
   runBefores: function() {
-    var len = this.currentStack.setups.length;
+    var len = this.stack[this.pos].setups.length;
     for (var i=0; i < len; i++) {
-      this.currentStack.setups[i].call();
+      this.stack[this.pos].setups[i].call();
     };
   },
   runAfters: function() {
-    for (var i=0; i < this.currentStack.teardowns.length; i++) {
-      this.currentStack.teardowns[i].call();
+    for (var i=0; i < this.stack[this.pos].teardowns.length; i++) {
+      this.stack[this.pos].teardowns[i].call();
     };
   },
 
   pass: function() {
-    this.currentStack.passed += 1;
+    this.stack[this.pos].passed += 1;
   },
   fail: function() {
-    this.currentStack.failed += 1;
+    this.stack[this.pos].failed += 1;
   },
   error: function(ex) {
-    this.currentStack.errors += 1;
-    this.currentStack.errorMsgs.push(ex.description || ex.message || ex);
+    this.stack[this.pos].errors += 1;
+    this.stack[this.pos].errorMsgs.push(ex.description || ex.message || ex);
   },
   
   report: function() {
     var report = [];
-    if(this.currentStack.passed > 0)
-      report.push( this.currentStack.passed +' passed');
-    if(this.currentStack.failed > 0)
-      report.push( this.currentStack.failed +' FAILED');
-    if(this.currentStack.errors > 0) {
-      for (var i=0; i < this.currentStack.errorMsgs.length; i++) {
-        if(!Spec.SPECS_ONLY) this.log( "> "+ this.currentStack.errorMsgs[i], 1 );
+    if(this.stack[this.pos].passed > 0)
+      report.push( this.stack[this.pos].passed +' passed');
+    if(this.stack[this.pos].failed > 0)
+      report.push( this.stack[this.pos].failed +' FAILED');
+    if(this.stack[this.pos].errors > 0) {
+      for (var i=0; i < this.stack[this.pos].errorMsgs.length; i++) {
+        if(!Spec.SPECS_ONLY) this.log( "> "+ this.stack[this.pos].errorMsgs[i], 1 );
       };
-     report.push( this.currentStack.errors +' ERROR(s)');
+     report.push( this.stack[this.pos].errors +' ERROR(s)');
     }
     if(!Spec.SPECS_ONLY) this.log( report.join(", "), 1 );
   },
@@ -97,6 +101,41 @@ var Spec = {
       if(_root.console) {
         console.log(pad + msg);
       }
+      
+      this.output.push(pad + msg);
+      _root.onload = function(){
+        var out = document.getElementById('output');
+        if(!out) {
+          out = document.createElement('div');
+          out.id = "output";
+          document.body.appendChild(out);
+        }
+        
+        var transformed = [];
+        for (var i=0; i < Spec.output.length; i++) {
+          var line = Spec.output[i];
+          tLine = line.replace(/[\W]/g, '&nbsp;');
+          
+          if(/[\w]*\>/.test(line)) {
+            transformed.push( '<span style="color:red;">'+ tLine +'</span>' );
+          }
+          else if(/[\w]*[\d]* passed$/.test(line)) {
+            transformed.push( '<span style="color:green;">'+ tLine +'</span>' );
+          }
+          else if(/[\w]*[\d]* passed/.test(line)) {
+            transformed.push( '<span style="color:orange;">'+ tLine +'</span>' );
+          }
+          else {
+            transformed.push( tLine );
+          }
+        }
+        
+        
+        out.innerHTML = "<div><tt>"+ transformed.join("</tt></div><div><tt>") +"</tt></div>";
+       } 
+      
+      
+/*
       if(output = document.getElementById('output')) {
         output.innerHTML += pad + msg +"\n";
       } else if(document.createElement && document.body) {
@@ -105,7 +144,8 @@ var Spec = {
         p.innerHTML = pad + msg +"\n";
         document.body.appendChild(p);
       }
-      
+*/    
+      /*
       if(!_root.onload) _root.onload = function() {
         var results = document.getElementById('output').innerHTML.split('\n'),
             transformed = [];
@@ -121,8 +161,9 @@ var Spec = {
             transformed.push( line );
           }
         };
-        document.getElementById('output').innerHTML = transformed.join("\n");
+        document.getElementById('output').innerHTML = transformed.join("<br/>");
       }
+      */
     } 
   },
 
@@ -174,10 +215,10 @@ function describe(groupName, block) {
 
 // setup/teardown dsl
 function before(block) {
-  Spec.currentStack.setups.push(block);
+  Spec.stack[Spec.pos].setups.push(block);
 }
 function after(block) {
-  Spec.currentStack.teardowns.push(block);
+  Spec.stack[Spec.pos].teardowns.push(block);
 }
 
 // test dsl
@@ -185,13 +226,13 @@ function should(testName, block) {
   // Reset pass/fail/error counts on stack...
   Spec.reset();
   Spec.log(testName);
-  Spec.runBefores();
   try {
+    Spec.runBefores();
     block.call();
+    Spec.runAfters();
   } catch (ex) {
     Spec.error(ex);
   }
-  Spec.runAfters();
   Spec.report();
 }
 // alias
@@ -201,6 +242,9 @@ var it = should;
 function expect(obj) {
   return new Spec.ObjectMatcher(obj);
 }
+// alias
+var assert = expect;
+
 
 // evaluators
 function equal(expected, actual) {

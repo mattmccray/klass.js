@@ -1,16 +1,17 @@
+// For running in the terminal via v8 (and probably rhino)
+if(!this.load) {
+
+  function load(path) {
+    require('../'+ path.replace(".js", ''));
+  }
+}
+
+
 load('src/klass.js')
 load('src/core/underscore.js')
 load('src/core/date.js')
 load('src/utils/parse-args.js')
 load('src/utils/spec_runner.js')
-
-
-var Screw = {
-  Unit: function(block) {
-    block.call();
-  }
-}
-
 
 load('specs/specs/klass_spec.js')
 load('specs/specs/parseArgs_spec.js')
