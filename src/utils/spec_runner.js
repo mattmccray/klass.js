@@ -114,7 +114,7 @@ var Spec = {
         var transformed = [];
         for (var i=0; i < Spec.output.length; i++) {
           var line = Spec.output[i];
-          tLine = line.replace(/[\W]/g, '&nbsp;');
+          tLine = line.replace(/[\s]/g, '&nbsp;');
           
           if(/[\w]*\>/.test(line)) {
             transformed.push( '<span style="color:red;">'+ tLine +'</span>' );

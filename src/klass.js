@@ -1,6 +1,6 @@
 // Version 2.0.7
 (function(globalObject, ident) {
-  function klass(name, methods) {
+  function klass(name, methods, scope) {
     if(arguments.length == 1 && typeof(name) != 'string') { // using typeOf to better detect true 'objects'
       methods = name;
       name = '[AnonymousKlass]';
@@ -43,8 +43,8 @@
     klass_ctor.prototype.klass = klass_ctor;
     klass_ctor.displayName = name;
     klass_ctor.subKlass = function(subName, subMethods) {
-      if(arguments.length == 1 && typeof(subName) == 'object') {
-        subProto = subName;
+      if(arguments.length == 1 && typeof(subName) != 'string') { // using typeOf to better detect true 'objects'
+        subMethods = subName;
         subName = '[AnonymousSubKlass]';
       };
       function parentKlass() {
@@ -54,9 +54,12 @@
       return klass(subName, new parentKlass());
     };
     if(name != '[AnonymousKlass]' && name != '[AnonymousSubKlass]') {
-      globalObject[name] = klass_ctor;
+      if(typeof scope != 'undefined')
+        scope[name] = klass_ctor
+      else
+        globalObject[name] = klass_ctor;
     };
     return klass_ctor
   };
   globalObject[ident] = klass;
-})(this, 'Klass');
+})((this.exports || this), 'Klass');

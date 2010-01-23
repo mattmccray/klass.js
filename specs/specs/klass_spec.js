@@ -114,11 +114,40 @@ describe('Klass', function() {
           return this.klass.displayName +" is running";
         }
       })
-      Car( 'Truck', {});
+      Car( 'Truck', {
+        stop: function() {
+          return 'stopped';
+        }
+      });
       var c = new Car();
       var t = new Truck();
       expect(c.start()).to(equal, 'Car is running');
       expect(t.start()).to(equal, 'Truck is running');
+      expect(t.stop()).to(equal, 'stopped');
+
+      //delete c
+      //delete t
+    });
+    
+    it("should inherit methods (Anonymous)", function() {
+      var Car = Klass({
+        start: function() {
+          return this.klass.displayName +" is running";
+        }
+      })
+      var Truck = Car.subKlass({
+        stop: function() {
+          return "stopped";
+        }
+      });
+      expect(Car).to_not(be_undefined);
+      expect(Truck).to_not(be_undefined);
+      var c = new Car();
+      var t = new Truck();
+      expect(c.start()).to(equal, '[AnonymousKlass] is running');
+      expect(t.start()).to(equal, '[AnonymousSubKlass] is running');
+      expect(t.stop()).to(equal, 'stopped');
+      
       //delete c
       //delete t
     });
@@ -131,7 +160,7 @@ describe('Klass', function() {
         }
       });
       
-      Person( 'Sith', {
+      Person.subKlass( 'Sith', {
         title: function() {
           return "Darth "+ this.callSuper('title');
         }
