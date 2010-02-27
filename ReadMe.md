@@ -1,8 +1,8 @@
 # Klass.js
 
-**NOTE:** This is just a cursory overview, more docs to come. Klass is under active development. Specs/Bugs/Patches are welcome. None of this is tested in IE. In fact, due to it's heavy leverage of prototypes, I'm not sure it will *ever* work under IE. (I'm using it in Titanium Desktop/iPhone apps).
+**NOTE:** This is just a cursory overview, more docs to come. Klass is under active development. Specs/Bugs/Patches are welcome. It does now work under IE 8 (not sure about older versions of IE).
 
-Klass.js is a simple class hierarchy layer for JavaScript that leverages the language's `prototype` chain. No object munging, no excessive iterating over and creating extra objects. You define a class's `prototype` in the class builder. So instantiating classes should be very cheap.
+Klass.js is a simple class hierarchy layer for JavaScript that leverages the language's `prototype` chain. It does as little object munging as possible. You define a class's `prototype` in the class builder. So instantiating classes should be very cheap.
 
 It's *not* a DOM framework. It's meant to run in conjunction with jQuery, or your DOM framework of choice.
 

@@ -3,15 +3,18 @@
     if(arguments.length == 1 && typeof(name) != 'string') { // using typeOf to better detect true 'objects'
       methods = name;
       name = '[AnonymousKlass]';
-    }
+    };
     if(typeof methods == 'undefined') methods = {};
     if(!('callSuper' in methods)) {
       methods.callSuper = function callSuper() {
         var symbol = Array.prototype.shift.call(arguments),
             parent = methods,
             method = (parent[symbol]) ? parent[symbol] : false;
-        if(method) { return method.apply(this, arguments); }
-        else { throw "Method not found: "+ symbol; };
+        if(method) {
+          return method.apply(this, arguments);
+        } else {
+          throw "Method not found: "+ symbol;
+        };
       };
     };
     if(!('method' in methods)) {
@@ -23,13 +26,18 @@
             meth = self[name];
         if (typeof meth === 'function') { return function curriedMethod() {
             return meth.apply(self, args.concat(Array.prototype.slice.call(arguments)));
-          };}
-        else { throw "Method "+ name +" not found!"; };
+          };
+        } else {
+          throw "Method "+ name +" not found!";
+        };
       };
     };
     function klass_ctor() {
-      if(this == globalObject || typeof(this.constructor) == 'undefined') { return klass_ctor.subKlass.apply(this, arguments); }
-      else if('init' in this) { this.init.apply(this, arguments);  }; // Constructor
+      if(this == globalObject || typeof(this.constructor) == 'undefined') {
+        return klass_ctor.subKlass.apply(this, arguments);
+      } else if('init' in this) {
+        this.init.apply(this, arguments);  // Constructor
+      };
     };
     if('_static_methods' in methods) {
       for(fName in methods['_static_methods']) { klass_ctor[fName] = methods['_static_methods'][fName]; };
@@ -50,15 +58,18 @@
         for(prop in subMethods) { this[prop] = subMethods[prop]; };
       };
       parentKlass.prototype = methods;
-      return klass(subName, new parentKlass());
+      var new_klass = klass(subName, new parentKlass());
+      if('subklassed' in klass_ctor) klass_ctor.subklassed(new_klass);
+      return new_klass;
     };
     if(name != '[AnonymousKlass]' && name != '[AnonymousSubKlass]') {
-      if(typeof scope != 'undefined')
+      if(typeof scope != 'undefined') {
         scope[name] = klass_ctor
-      else
+      } else {
         globalObject[name] = klass_ctor;
+      };
     };
-    return klass_ctor
+    return klass_ctor;
   };
   globalObject[ident] = klass;
 })((this.exports || this), 'Klass');

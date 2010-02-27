@@ -66,6 +66,28 @@ describe('Klass', function() {
       //delete AR
       //delete User
     });
+    
+    it("should fire 'subklassed' static method when a subklass is defined", function() {
+      var subKlassCount = 0;
+      Klass( 'Parent', {
+        klass: {
+          localSubKlassCount: 0,
+          subklassed: function(klass) {
+            console.log('Subklassed! '+ klass.displayName)
+            subKlassCount += 1;
+            Parent.localSubKlassCount += 1;
+          }
+        }
+      })
+      Parent( 'Child', {});
+      Child( 'Sibling', {});
+
+      expect(subKlassCount).to(equal, 2);
+      expect(Parent.localSubKlassCount).to(equal, 2);
+
+      //delete Parent
+      //delete Child
+    });
 
 // NOT ANYMORE
 /*
