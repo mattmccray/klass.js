@@ -43,7 +43,25 @@
       for(fName in methods['_static_methods']) { klass_ctor[fName] = methods['_static_methods'][fName]; };
     };
     if('klass' in methods) {
-      for(fName in methods['klass']) { klass_ctor[fName] = methods['klass'][fName]; };
+      for(fName in methods['klass']) {
+        if(fName == 'jQuery') {
+          klass_ctor[fName] = methods['klass'][fName];
+          var self = klass_ctor,
+              plugin_name = methods['klass'][fName];
+          jQuery.fn[plugin_name] = function(arg){
+            var args = Array.prototype.slice.call(arguments, 1);
+            if ($type(arg) == 'string'){
+              var instance = jQuery(this).data(name);
+              if (instance) instance[arg].apply(instance, args);
+            } else {
+              jQuery(this).data(name, new self(this.selector, jQuery.extend(self.prototype.options, arg)));
+            }
+          };
+        }
+        else {
+          klass_ctor[fName] = methods['klass'][fName];
+        }
+      };
       methods._static_methods = methods['klass'];
     };
     klass_ctor.prototype = methods;
